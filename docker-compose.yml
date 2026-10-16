@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql:8.0
+    container_name: cv_mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: cv_database
+      MYSQL_USER: cv_user
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    networks:
+      - cv_network
+
+  backend:
+    image: cayoja-backend:v1
+    container_name: cv_backend_node
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      DB_HOST: database
+      DB_USER: root
+      DB_PASSWORD: root_password
+      DB_NAME: cv_database
+    depends_on:
+      - database
+    networks:
+      - cv_network
+
+  frontend:
+    image: cayoja-frontend:v1
+    build: ./frontend
+    container_name: cv_frontend_react
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - cv_network
+
+volumes:
+  mysql_data:
+
+networks:
+  cv_network:
